@@ -3,47 +3,64 @@ services:
     name: ltss-api
     runtime: python
     plan: free
-    buildCommand: pip install -r backend/requirements.txt
-    startCommand: uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    rootDir: backend
     healthCheckPath: /api/health
+
     envVars:
       - key: ENVIRONMENT
         value: production
+
       - key: DATABASE_URL
         fromDatabase:
           name: ltss-db
           property: connectionString
+
       - key: CORS_ORIGINS
         value: "*"
+
       - key: AI_PROVIDER
         value: openai_compatible
+
       - key: OPENAI_COMPATIBLE_BASE_URL
         value: https://openrouter.ai/api/v1
+
       - key: OPENAI_COMPATIBLE_API_KEY
         sync: false
+
       - key: OPENAI_COMPATIBLE_MODEL
         value: openrouter/free
+
       - key: OLLAMA_BASE_URL
         value: http://127.0.0.1:11434
+
       - key: OLLAMA_MODEL
         value: gemma3:4b
+
       - key: EMERGENCY_NUMBER
         value: "112"
+
       - key: MENTAL_HEALTH_HELPLINE
         value: "14416"
+
 
   - type: web
     name: ltss-web
     runtime: static
-    buildCommand: >-
-      cd frontend && npm install && VITE_API_URL=$TEMP_API_URL/api npm run build
-    staticPublishPath: frontend/dist
+    rootDir: frontend
+
+    buildCommand: npm install && npm run build
+
+    staticPublishPath: dist
+
     envVars:
-      - key: TEMP_API_URL
+      - key: VITE_API_URL
         fromService:
           name: ltss-api
           type: web
           envVarKey: RENDER_EXTERNAL_URL
+
 
 databases:
   - name: ltss-db
